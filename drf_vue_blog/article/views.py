@@ -28,3 +28,6 @@ class ArticleList(generics.ListCreateAPIView):
     queryset = Article.objects.all()
     serializer_class = ArticleListSerializer
     permission_classes = [IsAdminUserOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
