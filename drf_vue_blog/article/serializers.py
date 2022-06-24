@@ -77,7 +77,7 @@ class TagSerializer(serializers.HyperlinkedModelSerializer):
         model = Tag
         fields = '__all__'
 
-class ArticleSerializer(serializers.HyperlinkedModelSerializer):
+class ArticleBaseSerializer(serializers.HyperlinkedModelSerializer):
     author = UserDescSerializer(read_only=True)
     # category 的嵌套序列化字段
     category = CategorySerializer(read_only=True)
@@ -106,6 +106,26 @@ class ArticleSerializer(serializers.HyperlinkedModelSerializer):
                     Tag.objects.create(text=text)
 
         return super().to_internal_value(data)
+
+class ArticleSerializer(ArticleBaseSerializer):
+    class Meta:
+        model = Article
+        fields = '__all__'
+        extra_kwargs = {'body': {'write_only': True}}
+
+# 注意继承的父类是 ArticleBaseSerializer
+class ArticleDetailSerializer(ArticleBaseSerializer):
+    # 渲染后的正文
+    body_html = serializers.SerializerMethodField()
+    # 渲染后的目录
+    toc_html = serializers.SerializerMethodField()
+
+    def get_body_html(self, obj):
+        return obj.get_md()[0]
+
+    def get_toc_html(self, obj):
+        return obj.get_md()[1]
+
     class Meta:
         model = Article
         fields = '__all__'
